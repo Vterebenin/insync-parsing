@@ -1,4 +1,7 @@
 use pdf_extract::extract_text;
+use std::fs::File;
+use std::io::Write;
+
 
 const DROP_AFTER: &str = "Привязанные \nкарты: Visa Smart Gold (4***********6060)";
 const HEADER_COLUMN: &str = "Дата Примечание Сумма \nв \nвалюте \nсчета\n Сумма в \nвалюте \nоперации";
@@ -14,6 +17,27 @@ pub fn parse_content_from_filename(filename: &str) -> String {
     pdf_content
 }
 
+pub fn write_output(slice: Vec<&str>) {
+    let mut file: File = File::create("output.txt").expect("Failed to create file");
+
+    let mut prev_month_number: &str = "00";
+
+    for expense in slice {
+        let expense: String = expense.replace("\n", "");
+        let expense_items: Vec<&str> = expense.split(" ").collect::<Vec<&str>>();
+        let money: &str = expense_items[expense_items.len()-4];
+        let currency: &str = expense_items[expense_items.len() - 3];
+        let date: &str = expense_items[0];
+        let text = format!("{};{};{}\n", money, currency, date);
+        let current_month_number = date.split(".").collect::<Vec<&str>>()[1];
+        if prev_month_number != current_month_number {
+            prev_month_number = current_month_number;
+            file.write_all(b"{date}").expect("Failed to write to file");
+        }
+        file.write_all(text.as_bytes()).expect("Failed to write to file");
+    };
+}
+
 pub fn split_content(content: &str) -> Vec<&str> {
     let split: std::str::Split<&str> = content.split("\n\n");
     let vec: Vec<&str> = split.collect::<Vec<&str>>();
@@ -21,16 +45,14 @@ pub fn split_content(content: &str) -> Vec<&str> {
         .iter()
         .position(|&item| item == DROP_AFTER)
         .unwrap();
-    println!("{}", index);
-
-    let mut slice: Vec<&str> = vec[index+1..vec.len()].to_vec();
-    let slice: Vec<&str> = slice
+    let slice: Vec<&str> = vec[index+1..vec.len()].to_vec()
         .iter()
         .cloned()
-        .filter(|&item| item != HEADER_COLUMN)
+        .filter(|&item| {
+            item != HEADER_COLUMN && item.len() > 10
+        })
         .collect();
-
-    println!("{:#?}", slice);
+    write_output(slice);
     vec
 }
 
