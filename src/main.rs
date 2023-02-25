@@ -20,7 +20,7 @@ pub fn parse_content_from_filename(filename: &str) -> String {
 pub fn write_output(slice: Vec<&str>) {
     let mut file: File = File::create("output.txt").expect("Failed to create file");
 
-    let mut prev_month_number: &str = "00";
+    let mut prev_month: String = String::new();
 
     for expense in slice {
         let expense: String = expense.replace("\n", "");
@@ -29,18 +29,20 @@ pub fn write_output(slice: Vec<&str>) {
         let currency: &str = expense_items[expense_items.len() - 3];
         let date: &str = expense_items[0];
         let text = format!("{};{};{}\n", money, currency, date);
-        let current_month_number = date.split(".").collect::<Vec<&str>>()[1];
-        if prev_month_number != current_month_number {
-            prev_month_number = current_month_number;
-            file.write_all(b"{date}").expect("Failed to write to file");
+        let splitted_date = date.split(".").collect::<Vec<&str>>();
+        let current_month: String = splitted_date[1].to_string();
+        let current_year: String = splitted_date[2].to_string();
+        if prev_month != current_month {
+            prev_month = current_month;
+            file.write_all(format!("{}-{}\n", prev_month, current_year).as_bytes()).expect("Failed to write to file");
         }
         file.write_all(text.as_bytes()).expect("Failed to write to file");
     };
 }
 
 pub fn split_content(content: &str) -> Vec<&str> {
-    let split: std::str::Split<&str> = content.split("\n\n");
-    let vec: Vec<&str> = split.collect::<Vec<&str>>();
+    let split: std::str::Split<&str> = content.clone().split("\n\n");
+    let vec: Vec<&str> = split.collect();
     let index: usize = vec
         .iter()
         .position(|&item| item == DROP_AFTER)
