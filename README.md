@@ -13,3 +13,5 @@ Currently in order for this script to work, follow these steps:
 Todo: 
 * refactoring
 * file names from cli
+* possibly multithreading (currently it overall runs in about 0.5seconds)
+* add tests (why not?)
