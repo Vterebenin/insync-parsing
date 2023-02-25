@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::Write;
 
 
-const DROP_AFTER: &str = "Привязанные \nкарты: Visa Smart Gold (4***********6060)";
+const DROP_AFTER: &str = "Привязанные \nкарты";
 const HEADER_COLUMN: &str = "Дата Примечание Сумма \nв \nвалюте \nсчета\n Сумма в \nвалюте \nоперации";
 
 pub fn parse_content_from_filename(filename: &str) -> String {
@@ -45,7 +45,7 @@ pub fn split_content(content: &str) -> Vec<&str> {
     let vec: Vec<&str> = split.collect();
     let index: usize = vec
         .iter()
-        .position(|&item| item == DROP_AFTER)
+        .position(|&item| item.contains(DROP_AFTER))
         .unwrap();
     let slice: Vec<&str> = vec[index+1..vec.len()].to_vec()
         .iter()
